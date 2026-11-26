@@ -1,0 +1,48 @@
+
+name: Tu dong giai nen va build APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "source.zip"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Lay repository
+        uses: actions/checkout@v4
+
+      - name: Cai dat Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cai dat Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Giai nen ma nguon
+        run: |
+          mkdir -p extracted
+          unzip -q source.zip -d extracted
+          test -f extracted/settings.gradle.kts
+          cp -a extracted/. .
+
+      - name: Build APK
+        run: gradle assembleDebug
+
+      - name: Luu APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LichAmVietPro-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
